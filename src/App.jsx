@@ -685,8 +685,15 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
   const [aiScores, setAiScores] = useState({});
   const [aiFeedback, setAiFeedback] = useState({});
   const [loadingKeys, setLoadingKeys] = useState({});
-  const [expanded, setExpanded] = useState({});
   const [manualScores, setManualScores] = useState({});
+
+  /* Auto-expand all FRQ sections so feedback is visible */
+  const buildDefaultExpanded = () => {
+    const exp = { "ebq-detail": true };
+    if (aaq) aaq.parts.forEach(p => { exp[`aaq-${p.letter}`] = true; });
+    return exp;
+  };
+  const [expanded, setExpanded] = useState(buildDefaultExpanded);
 
   const getScore = (key, fallback = 0) => manualScores[key] != null ? manualScores[key] : (aiScores[key] != null ? aiScores[key] : fallback);
 
