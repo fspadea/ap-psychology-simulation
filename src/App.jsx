@@ -125,7 +125,7 @@ function calcAPScoreFRQOnly(frqEarned, frqPossible) {
 }
 
 const AP_SCORE_LABELS = { 5: "Extremely Well Qualified", 4: "Well Qualified", 3: "Qualified", 2: "Possibly Qualified", 1: "No Recommendation" };
-const AP_SCORE_COLORS = { 5: C.g, 4: "#22d3ee", 3: C.gold, 2: "#fb923c", 1: C.r };
+const AP_SCORE_COLORS = { 5: C.g, 4: "#4ADE80", 3: C.b, 2: "#FB923C", 1: C.r };
 
 /* ── Study Display (for AAQ) ── */
 function StudyDisplay({ study }) {
