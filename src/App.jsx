@@ -1041,118 +1041,284 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
    PDF GENERATION
    ══════════════════════════════════════════════════════════════ */
 function generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores }) {
-  const esc = (s) => String(s || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-  const nl2br = (s) => esc(s).replace(/\n/g, "<br/>");
+  const esc = str => (str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+  const nl2br = str => esc(str).split("\n").join("<br/>");
   const getS = (key) => manualScores[key] != null ? manualScores[key] : (aiScores[key] != null ? aiScores[key] : 0);
+  const today = new Date().toLocaleDateString("en-US",{year:"numeric",month:"long",day:"numeric"});
 
   const hasMC = test.hasMC && test.mc && test.mc.length > 0;
   const aaq = test.frqs.find(f => f.type === "aaq");
   const ebq = test.frqs.find(f => f.type === "ebq");
+  const mcTotal = hasMC ? test.mc.length : 0;
+  const mcPct = mcTotal ? Math.round((mcCorrect/mcTotal)*100) : 0;
+  const totalFRQEarned = aaqEarned + getS("ebq-total");
+  const totalFRQPossible = (aaq ? aaq.points : 0) + (ebq ? ebq.points : 0);
+  const frqPct = totalFRQPossible ? Math.round((totalFRQEarned/totalFRQPossible)*100) : 0;
 
   /* MC block */
-  let mcHtml = "";
-  if (hasMC) {
-    mcHtml = `<h2 style="color:#60a5fa;margin-top:40px">Multiple Choice — ${mcCorrect}/${test.mc.length}</h2>`;
-    test.mc.forEach(q => {
-      const selected = mcAnswers[q.num];
-      const correct = q.answer;
-      mcHtml += `<div style="margin:12px 0;padding:12px;border:1px solid #1e3a5f;border-radius:8px;background:#0d1a2d">`;
-      mcHtml += `<div style="font-weight:600;margin-bottom:8px">${q.num}. ${esc(q.stem)}</div>`;
-      for (let i = 0; i < 4; i++) {
-        const letter = q.choices[i * 2];
-        const text = q.choices[i * 2 + 1];
-        const isCorrect = letter === correct;
-        const isSelected = letter === selected;
-        const bg = isCorrect ? "#34d39922" : isSelected ? "#f8717122" : "transparent";
-        const col = isCorrect ? "#34d399" : isSelected ? "#f87171" : "#94a3b8";
-        mcHtml += `<div style="padding:4px 8px;margin:2px 0;border-radius:4px;background:${bg};color:${col}"><strong>${letter}</strong> ${esc(text)}`;
-        if (isCorrect) mcHtml += ` <span style="color:#34d399">&#10003;</span>`;
-        if (isSelected && !isCorrect) mcHtml += ` <span style="color:#f87171">&#10007;</span>`;
-        mcHtml += `</div>`;
-      }
-      mcHtml += `</div>`;
-    });
-  }
+  const mcBlock = hasMC ? `
+    <div class="task-card" style="margin-bottom:14px;">
+      <div class="task-hdr" style="background:#1a3a5c;">
+        <div class="task-num" style="border-color:#38bdf8;color:#38bdf8;">I</div>
+        <div>
+          <div class="task-hdr-lbl">Section I</div>
+          <div class="task-hdr-name">Multiple Choice \u00b7 75 Questions \u00b7 90 Minutes</div>
+        </div>
+        <div class="task-score" style="color:#38bdf8;">${mcCorrect} / ${mcTotal}</div>
+      </div>
+      <div class="task-body">
+        <div style="display:flex;align-items:center;gap:16px;padding:10px 0 14px;border-bottom:1px solid #eee;margin-bottom:18px;">
+          <div style="font-size:32px;font-weight:800;font-family:monospace;color:#111;">${mcCorrect}<span style="font-size:16px;color:#888;">/${mcTotal}</span></div>
+          <div style="flex:1;background:#eee;height:10px;border-radius:5px;overflow:hidden;">
+            <div style="height:100%;width:${mcPct}%;background:${mcPct>=70?"#27ae60":mcPct>=50?"#e67e22":"#e74c3c"};border-radius:5px;"></div>
+          </div>
+          <div style="font-size:15px;font-weight:700;color:${mcPct>=70?"#27ae60":mcPct>=50?"#e67e22":"#e74c3c"};">${mcPct}%</div>
+        </div>
+        ${test.mc.map(mq=>{
+          const chosen = mcAnswers?.[mq.num];
+          const isCorrect = chosen === mq.answer;
+          const unanswered = !chosen;
+          const borderCol = isCorrect?"#b8e4c8":unanswered?"#ddd":"#f5c6c6";
+          const hdrBg = isCorrect?"#e8f8f0":unanswered?"#f9f9f9":"#fdf0f0";
+          const statusCol = isCorrect?"#27ae60":unanswered?"#999":"#e74c3c";
+          const statusLabel = isCorrect?"\u2713 Correct":unanswered?"\u2013 Not answered":"\u2717 Incorrect";
+          const setInfo = test.mcSets ? test.mcSets.find(s => s.setNum === mq.set) : null;
+          const stimNote = setInfo ? `<div style="font-style:italic;font-size:10.5px;color:#555;padding:6px 12px;background:#f7f7f2;border-bottom:1px solid #e8e8e0;">Set ${mq.set}: ${esc(setInfo.title||"")}</div>` : "";
+          return `<div style="border:1px solid ${borderCol};border-radius:6px;margin-bottom:10px;overflow:hidden;page-break-inside:avoid;">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 12px;background:${hdrBg};border-bottom:1px solid ${borderCol};">
+              <div style="font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#777;">Q${mq.num}</div>
+              <div style="font-size:11px;font-weight:800;color:${statusCol};">${statusLabel}</div>
+            </div>
+            ${stimNote}
+            <div style="padding:10px 12px 6px;">
+              <div style="font-size:12px;font-weight:600;color:#111;line-height:1.6;margin-bottom:10px;">${esc(mq.stem)}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:4px 12px;">
+                ${Array.from({length:4},(_,i)=>{
+                  const letter = mq.choices[i*2];
+                  const text   = mq.choices[i*2+1];
+                  const isChosen  = chosen === letter;
+                  const isAnsKey  = mq.answer === letter;
+                  let bg="#fff", border="#ddd", col="#333", badge="";
+                  if(isAnsKey && isChosen) { bg="#e8f8f0"; border="#27ae60"; col="#27ae60"; badge='<span style="margin-left:6px;font-size:9px;font-weight:700;color:#27ae60;white-space:nowrap;">\u2713 Correct</span>'; }
+                  else if(isAnsKey)        { bg="#e8f8f0"; border="#27ae60"; col="#27ae60"; badge='<span style="margin-left:6px;font-size:9px;font-weight:700;color:#27ae60;white-space:nowrap;">\u2713 Answer</span>'; }
+                  else if(isChosen)        { bg="#fdf0f0"; border="#e74c3c"; col="#e74c3c"; badge='<span style="margin-left:6px;font-size:9px;font-weight:700;color:#e74c3c;white-space:nowrap;">\u2717 Selected</span>'; }
+                  return `<div style="display:flex;align-items:flex-start;gap:7px;padding:5px 8px;background:${bg};border:1px solid ${border};border-radius:4px;">
+                    <span style="font-weight:800;font-size:11px;color:${col};flex-shrink:0;min-width:14px;">${letter}</span>
+                    <span style="font-size:11px;color:${col};line-height:1.4;flex:1;">${esc(text)}${badge}</span>
+                  </div>`;
+                }).join("")}
+              </div>
+            </div>
+          </div>`;
+        }).join("")}
+      </div>
+    </div>` : "";
 
   /* AAQ block */
-  let aaqHtml = "";
-  if (aaq) {
-    aaqHtml = `<h2 style="color:#fbbf24;margin-top:40px">Article Analysis Question — ${aaqEarned}/${aaq.points}</h2>`;
-    aaqHtml += `<div style="color:#94a3b8;font-size:13px;margin-bottom:12px"><em>${esc(aaq.study.title)}</em></div>`;
-    aaq.parts.forEach(part => {
-      const response = aaqAnswers[part.letter] || "(No response)";
+  const aaqBlock = aaq ? (() => {
+    const partsHtml = aaq.parts.map(part => {
+      const key = `aaq-${part.letter}`;
+      const response = aaqAnswers[part.letter] || "";
       const rubric = aaq.rubric.find(r => r.row === part.letter);
       const maxPts = rubric?.points || 1;
-      const score = getS(`aaq-${part.letter}`);
-      const feedback = aiFeedback[`aaq-${part.letter}`] || "";
-      aaqHtml += `<div style="margin:12px 0;padding:12px;border:1px solid #1e3a5f;border-radius:8px;background:#0d1a2d">`;
-      aaqHtml += `<div style="font-weight:700;color:#60a5fa;margin-bottom:6px">Part ${part.letter} <span style="color:${score > 0 ? "#34d399" : "#f87171"};float:right">${score}/${maxPts}</span></div>`;
-      aaqHtml += `<div style="color:#94a3b8;font-size:13px;margin-bottom:6px">${esc(part.prompt)}</div>`;
-      aaqHtml += `<div style="background:#060b14;padding:10px;border-radius:6px;color:#f1f5f9;font-size:13px;line-height:1.6;white-space:pre-wrap">${nl2br(response)}</div>`;
-      if (feedback) aaqHtml += `<div style="margin-top:6px;color:#94a3b8;font-size:12px;font-style:italic">${esc(feedback)}</div>`;
-      aaqHtml += `</div>`;
-    });
-  }
+      const score = getS(key);
+      const fb = aiFeedback[key] || "";
+      return `<div style="margin-bottom:12px;padding:10px 14px;border:1px solid #ccc;border-radius:4px;">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+          <strong>Part ${part.letter}</strong>
+          <span class="score-chip">Score: ${score} / ${maxPts}</span>
+        </div>
+        <div style="font-size:11px;color:#555;margin-bottom:6px;font-style:italic;">${esc(part.prompt)}</div>
+        <div class="response-wrap">
+          <div class="response-hdr">\u270F Response \u00b7 ${response.split(/\s+/).filter(Boolean).length} words</div>
+          <div class="response-body ${!response.trim()?"empty":""}">${response.trim()?nl2br(response):"No response submitted."}</div>
+        </div>
+        ${fb?`<div class="ai-fb"><span class="ai-fb-label">\u2726 AI Feedback</span>${nl2br(fb)}</div>`:""}
+        ${rubric?`<div style="margin-top:6px;padding:6px 10px;background:#f9f9f9;border:1px solid #eee;border-radius:3px;">
+          <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:3px;">Rubric: ${esc(rubric.category)}</div>
+          <div style="font-size:11px;color:#555;line-height:1.5;">${esc(rubric.description)}</div>
+        </div>`:""}
+      </div>`;
+    }).join("");
+
+    return `<div class="task-card">
+      <div class="task-hdr">
+        <div class="task-num">1</div>
+        <div>
+          <div class="task-hdr-lbl">Article Analysis Question</div>
+          <div class="task-hdr-name">${esc(aaq.study.title.length > 60 ? aaq.study.title.slice(0,57)+"..." : aaq.study.title)} \u00b7 ${aaq.points} points</div>
+        </div>
+        <div class="task-score">${aaqEarned} / ${aaq.points}</div>
+      </div>
+      <div class="task-body">
+        <div class="sec-label">Research Study</div>
+        <div style="font-size:11px;color:#444;margin-bottom:12px;font-style:italic;">${esc(aaq.study.citation)}</div>
+        ${partsHtml}
+      </div>
+    </div>`;
+  })() : "";
 
   /* EBQ block */
-  let ebqHtml = "";
-  if (ebq) {
-    const ebqScore = getS("ebq-total");
-    const feedback = aiFeedback["ebq-total"] || "";
-    ebqHtml = `<h2 style="color:#34d399;margin-top:40px">Evidence-Based Question — ${ebqScore}/${ebq.points}</h2>`;
-    ebqHtml += `<div style="color:#94a3b8;font-size:13px;margin-bottom:12px">Topic: ${esc(ebq.topic)}</div>`;
-    ebqHtml += `<div style="margin:12px 0;padding:12px;border:1px solid #1e3a5f;border-radius:8px;background:#0d1a2d">`;
-    ebqHtml += `<div style="background:#060b14;padding:10px;border-radius:6px;color:#f1f5f9;font-size:13px;line-height:1.7;white-space:pre-wrap">${nl2br(ebqAnswer || "(No response)")}</div>`;
-    if (feedback) ebqHtml += `<div style="margin-top:8px;color:#94a3b8;font-size:12px;font-style:italic">${esc(feedback)}</div>`;
-    ebqHtml += `</div>`;
+  const ebqBlock = ebq ? (() => {
+    const key = "ebq-total";
+    const score = getS(key);
+    const fb = aiFeedback[key] || "";
+    return `<div class="task-card">
+      <div class="task-hdr">
+        <div class="task-num">2</div>
+        <div>
+          <div class="task-hdr-lbl">Evidence-Based Question</div>
+          <div class="task-hdr-name">${esc(ebq.topic)} \u00b7 ${ebq.points} points</div>
+        </div>
+        <div class="task-score">${score} / ${ebq.points}</div>
+      </div>
+      <div class="task-body">
+        <div class="sec-label">Topic</div>
+        <div style="font-size:12px;color:#444;margin-bottom:6px;font-style:italic;">${esc(ebq.topic)}</div>
+        <div class="sec-label" style="margin-top:10px;">Sources</div>
+        ${ebq.sources.map(s => `<div style="font-size:11px;color:#555;margin-bottom:4px;padding:4px 8px;background:#f7f7f2;border-radius:3px;">
+          <strong>Source ${s.num}:</strong> ${esc(s.title)} <span style="color:#888;">— ${esc(s.citation)}</span>
+        </div>`).join("")}
+        <div class="sec-label" style="margin-top:12px;">Student Essay</div>
+        <div class="response-wrap">
+          <div class="response-hdr">\u270F Written response \u00b7 ${(ebqAnswer||"").split(/\s+/).filter(Boolean).length} words</div>
+          <div class="response-body ${!(ebqAnswer||"").trim()?"empty":""}">${(ebqAnswer||"").trim()?nl2br(ebqAnswer):"No response submitted."}</div>
+        </div>
+        <div class="rubric-table">
+          <div class="rubric-hdr">Scoring Rubric</div>
+          ${ebq.rubric.map(row=>`<div class="rubric-row">
+            <div class="rubric-row-hdr">
+              <span class="rubric-label">Row ${row.row}: ${esc(row.category)}</span>
+              <span class="rubric-pts">${row.points} pt${row.points>1?"s":""}</span>
+            </div>
+            <div class="rubric-desc">${esc(row.description)}</div>
+          </div>`).join("")}
+        </div>
+        <div class="score-row"><span class="score-chip">AI Score: ${score} / ${ebq.points}</span></div>
+        ${fb?`<div class="ai-fb"><span class="ai-fb-label">\u2726 AI Feedback</span>${nl2br(fb)}</div>`:""}
+      </div>
+    </div>`;
+  })() : "";
 
-    /* Rubric table */
-    ebqHtml += `<table style="width:100%;border-collapse:collapse;font-size:12px;margin-top:12px"><thead><tr>`;
-    ["Category", "Points", "Description"].forEach(h => { ebqHtml += `<th style="color:#fbbf24;font-weight:700;padding:6px 10px;border-bottom:2px solid #1e3a5f;text-align:left">${h}</th>`; });
-    ebqHtml += `</tr></thead><tbody>`;
-    ebq.rubric.forEach(r => {
-      ebqHtml += `<tr style="border-bottom:1px solid #1e3a5f33"><td style="padding:6px 10px;color:#f1f5f9;font-weight:600">${esc(r.category)}</td><td style="padding:6px 10px;color:#94a3b8;text-align:center">${r.points}</td><td style="padding:6px 10px;color:#94a3b8">${esc(r.description)}</td></tr>`;
-    });
-    ebqHtml += `</tbody></table>`;
-  }
-
-  const html = `<!DOCTYPE html><html><head><meta charset="UTF-8"><title>AP Psychology — Exam Report</title>
-<link rel="preconnect" href="https://fonts.googleapis.com"><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  const html = `<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>AP Psychology \u2014 ${esc(test.title)} \u00b7 Teacher Review</title>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{background:#0a1628;color:#f1f5f9;font-family:'Inter',system-ui,sans-serif;padding:32px;max-width:900px;margin:0 auto;font-size:14px;line-height:1.5}
-@media print{body{background:#fff;color:#000;padding:12px}h2{color:#1e3a8a!important}@page{size:A4;margin:12mm}}
-.no-print{text-align:center;margin:32px 0}
-.no-print button{background:#60a5fa;color:#060b14;border:none;padding:12px 32px;border-radius:10px;font-weight:700;font-size:16px;cursor:pointer;font-family:inherit}
-</style></head><body>
-<div style="text-align:center;margin-bottom:32px;padding:32px 0;border-bottom:2px solid #1e3a5f">
-<div style="font-size:40px;margin-bottom:8px">\u{1F9E0}</div>
-<h1 style="font-size:28px;font-weight:700">AP Psychology — Exam Report</h1>
-<div style="color:#94a3b8;font-size:14px;margin-top:4px">${esc(test.title)}</div>
-<div style="margin-top:20px;display:inline-flex;align-items:center;gap:24px">
-${hasMC ? `<div><div style="color:#94a3b8;font-size:12px">MC Score</div><div style="font-weight:700;font-size:22px">${mcCorrect}/${test.mc.length}</div></div>` : ""}
-<div><div style="color:#94a3b8;font-size:12px">FRQ Score</div><div style="font-weight:700;font-size:22px">${aaqEarned + getS("ebq-total")}/${(aaq ? aaq.points : 0) + (ebq ? ebq.points : 0)}</div></div>
-<div style="width:80px;height:80px;border-radius:50%;border:4px solid ${AP_SCORE_COLORS[apScore]};display:flex;align-items:center;justify-content:center;background:${AP_SCORE_COLORS[apScore]}22"><span style="font-size:36px;font-weight:700;color:${AP_SCORE_COLORS[apScore]}">${apScore}</span></div>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+  *{box-sizing:border-box;margin:0;padding:0}
+  body{font-family:'Inter',Arial,sans-serif;color:#111;background:white;font-size:12.5px;line-height:1.6}
+  @page{size:A4;margin:14mm 13mm}
+  @media print{-webkit-print-color-adjust:exact;print-color-adjust:exact;.no-print{display:none}}
+  .cover{border:1px solid #ccc;border-top:4px solid #111;padding:22px 26px 18px;margin-bottom:14px}
+  .cover-top{display:flex;justify-content:space-between;align-items:flex-start;margin-bottom:12px}
+  .cover-name{font-size:18px;font-weight:700;margin-bottom:3px}
+  .cover-sub{font-size:11.5px;color:#555}
+  .cover-stamp{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;border:2px solid #111;padding:4px 10px;white-space:nowrap}
+  .cover-pills{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:12px}
+  .pill{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.07em;border:1px solid #888;padding:2px 8px;color:#555;background:#f4f4f4}
+  .cover-score{display:flex;align-items:center;gap:16px;padding:12px 16px;background:#f4f4f4;border:1px solid #ccc;border-radius:4px;margin-bottom:10px}
+  .cover-score-num{font-size:36px;font-weight:800;font-family:monospace;color:#111}
+  .cover-score-of{font-size:16px;color:#555}
+  .cover-score-pct{font-size:14px;font-weight:700}
+  .cover-note{font-size:11px;color:#444;border-top:1px solid #ccc;padding-top:10px;line-height:1.65}
+  .task-card{border:1px solid #ccc;margin-bottom:14px;page-break-inside:avoid}
+  .task-hdr{display:flex;align-items:center;gap:10px;padding:10px 16px;background:#111;color:white}
+  .task-num{width:28px;height:28px;border-radius:3px;border:2px solid white;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:800;flex-shrink:0}
+  .task-hdr-lbl{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:0.1em;color:#aaa;margin-bottom:1px}
+  .task-hdr-name{font-size:12.5px;font-weight:700}
+  .task-score{margin-left:auto;font-size:16px;font-weight:800;font-family:monospace;white-space:nowrap;color:white}
+  .task-body{padding:16px 18px}
+  .sec-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.12em;color:#777;margin-bottom:6px;display:flex;align-items:center;gap:7px}
+  .sec-label::after{content:'';flex:1;height:1px;background:#ccc}
+  .response-wrap{border:1px solid #888;margin-bottom:10px}
+  .response-hdr{padding:5px 11px;background:#ebebeb;border-bottom:1px solid #ccc;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#555}
+  .response-body{padding:12px 14px;font-size:13px;line-height:1.9;white-space:pre-wrap;word-break:break-word;min-height:80px;font-family:'Georgia',serif;font-style:italic;background-image:repeating-linear-gradient(transparent,transparent 29px,#ddd 29px,#ddd 30px);background-size:100% 30px}
+  .response-body.empty{color:#aaa;font-style:italic;font-family:'Inter',Arial,sans-serif;background-image:none;background:#f9f9f9;min-height:48px}
+  .rubric-table{border:1px solid #ccc;margin-bottom:10px}
+  .rubric-hdr{padding:7px 12px;background:#ebebeb;font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#555;border-bottom:1px solid #ccc}
+  .rubric-row{padding:10px 12px;border-bottom:1px solid #eee}
+  .rubric-row:last-child{border-bottom:none}
+  .rubric-row-hdr{display:flex;justify-content:space-between;align-items:center;margin-bottom:4px}
+  .rubric-label{font-size:12px;font-weight:700;color:#111}
+  .rubric-pts{font-size:11px;font-weight:700;font-family:monospace;color:#111;background:#f4f4f4;border:1px solid #ccc;padding:1px 8px;border-radius:2px}
+  .rubric-desc{font-size:11.5px;color:#444;line-height:1.55}
+  .score-row{display:flex;align-items:flex-start;gap:12px;flex-wrap:wrap;margin-top:6px}
+  .score-chip{background:#111;color:white;font-size:11px;font-weight:700;font-family:monospace;padding:3px 10px;border-radius:3px}
+  .ai-fb{background:#eef6ff;border:1px solid #b3d4f5;border-left:3px solid #3498db;padding:8px 12px;font-size:11.5px;color:#1a3a5c;line-height:1.6;margin-top:8px}
+  .ai-fb-label{display:block;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.1em;color:#3498db;margin-bottom:4px}
+  .doc-footer{text-align:center;font-size:10px;color:#aaa;padding-top:12px;border-top:1px solid #ccc;margin-top:8px;font-style:italic}
+  .print-btn{position:fixed;bottom:18px;right:18px;background:#111;color:white;border:none;border-radius:4px;padding:9px 18px;font-size:12px;font-weight:700;cursor:pointer;font-family:inherit;box-shadow:0 3px 10px rgba(0,0,0,0.25);z-index:1000}
+</style>
+</head>
+<body style="padding:20px 24px;">
+<div class="cover">
+  <div class="cover-top">
+    <div>
+      <div class="cover-name">AP Psychology${hasMC?" \u2014 Full Practice Exam":" \u2014 FRQ Practice"}</div>
+      <div class="cover-sub">Teacher Review Copy \u00b7 ${esc(test.title)} \u00b7 <strong>Not an official College Board document</strong></div>
+    </div>
+    <div class="cover-stamp">Teacher Copy</div>
+  </div>
+  <div class="cover-pills">
+    ${hasMC?`<span class="pill">Section I \u2014 75 Multiple Choice</span>`:""}
+    <span class="pill">AAQ \u2014 Article Analysis</span>
+    <span class="pill">EBQ \u2014 Evidence-Based</span>
+  </div>
+  ${hasMC?`
+  <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;">
+    <div class="cover-score" style="margin-bottom:0;">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#3498db;margin-bottom:4px;">Section I \u2014 MC</div>
+        <span class="cover-score-num" style="font-size:28px;color:#3498db;">${mcCorrect}</span>
+        <span class="cover-score-of" style="font-size:13px;">/ ${mcTotal}</span>
+        <span class="cover-score-pct" style="color:${mcPct>=70?"#27ae60":mcPct>=50?"#e67e22":"#e74c3c"};">${mcPct}%</span>
+      </div>
+    </div>
+    <div class="cover-score" style="margin-bottom:0;">
+      <div>
+        <div style="font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#888;margin-bottom:4px;">FRQ Score</div>
+        <span class="cover-score-num" style="font-size:28px;">${totalFRQEarned}</span>
+        <span class="cover-score-of" style="font-size:13px;">/ ${totalFRQPossible}</span>
+        <span class="cover-score-pct" style="color:${frqPct>=70?"#27ae60":frqPct>=50?"#e67e22":"#e74c3c"};">${frqPct}%</span>
+      </div>
+    </div>
+  </div>`:`
+  <div class="cover-score">
+    <span class="cover-score-num">${totalFRQEarned}</span>
+    <span class="cover-score-of">/ ${totalFRQPossible} points</span>
+    <span class="cover-score-pct" style="color:${frqPct>=70?"#27ae60":frqPct>=50?"#e67e22":"#e74c3c"};">${frqPct}%</span>
+  </div>`}
+  <div class="cover-note">
+    <strong>\u26A0\uFE0F Practice document only \u2014 not an official College Board exam.</strong> Each section shows the original prompt followed by the student\u2019s response and AI score. Generated: ${today}
+  </div>
 </div>
-<div style="color:${AP_SCORE_COLORS[apScore]};font-weight:600;margin-top:8px">${esc(apLabel)}</div>
+${mcBlock}
+${aaqBlock}
+${ebqBlock}
+<div class="doc-footer">
+  Generated by AP Psychology Exam Simulator \u00b7 For classroom practice only \u00b7 Not affiliated with, endorsed by, or representative of College Board or any official AP exam
 </div>
-${mcHtml}${aaqHtml}${ebqHtml}
-<div style="margin-top:40px;padding-top:16px;border-top:1px solid #1e3a5f;color:#94a3b8;font-size:11px;text-align:center">
-<p>AP Psychology is a trademark of the College Board. This report was generated by the AP Psychology Exam Simulator for educational practice only.</p>
-</div>
-<div class="no-print"><button onclick="window.print()">Print / Save as PDF</button></div>
-</body></html>`;
+<button class="print-btn no-print" onclick="window.print()">\uD83D\uDDA8\uFE0F Print / Save PDF</button>
+</body>
+</html>`;
 
-  const w = window.open("", "_blank");
-  if (w) {
-    w.document.write(html);
-    w.document.close();
+  const win = window.open("", "_blank");
+  if (win) {
+    win.document.open();
+    win.document.write(html);
+    win.document.close();
   } else {
-    const blob = new Blob([html], { type: "text/html" });
+    const blob = new Blob([html], { type: "text/html;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "ap-psychology-exam-report.html";
+    a.href = url;
+    a.download = "teacher-report-ap-psychology.html";
+    document.body.appendChild(a);
     a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 10000);
   }
 }
 
