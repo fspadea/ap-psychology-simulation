@@ -786,64 +786,108 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
     <div style={{ minHeight: "100vh", background: gradient, fontFamily: font }}>
       {noiseBg}
       <div style={{ maxWidth: 900, margin: "0 auto", padding: mob ? "24px 16px" : "48px 24px", position: "relative", zIndex: 1 }}>
-        {/* Score card */}
-        <div style={{ background: C.mid, border: `1px solid ${C.border}`, borderRadius: 20, padding: mob ? 24 : 32, marginBottom: 32, textAlign: "center" }}>
-          <div style={{ fontSize: 14, color: C.muted, marginBottom: 12 }}>Your Estimated AP Score</div>
-          <div style={{ width: 100, height: 100, borderRadius: "50%", border: `4px solid ${apColor}`, display: "flex", alignItems: "center", justifyContent: "center", margin: "0 auto 12px", background: `${apColor}15` }}>
-            <span style={{ fontSize: 40, fontWeight: 700, color: apColor }}>{apScore}</span>
-          </div>
-          <div style={{ color: apColor, fontWeight: 600, fontSize: 16, marginBottom: 16 }}>{apLabel}</div>
+        {/* Score card — matches other AP subjects */}
+        <div style={{ background: C.mid, border: `1px solid ${C.border}`, borderRadius: 20, padding: mob ? 24 : 32, marginBottom: 32 }}>
+          {/* Top row: scores left, AP circle right */}
+          <div style={{ display: "flex", justifyContent: "space-between", alignItems: mob ? "center" : "flex-start", flexDirection: mob ? "column" : "row", gap: 24 }}>
+            {/* Left side: MC + FRQ scores */}
+            <div style={{ flex: 1 }}>
+              {/* MC Score */}
+              {hasMC && (() => {
+                const mcPct = Math.round((mcCorrect / test.mc.length) * 100);
+                const mcCol = mcPct >= 70 ? C.g : mcPct >= 50 ? C.gold : C.r;
+                return (
+                  <div style={{ marginBottom: 24 }}>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: C.b, marginBottom: 8 }}>Section I — MC Score</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 40, fontWeight: 800, color: C.b }}>{mcCorrect}</span>
+                      <span style={{ fontSize: 18, color: C.muted }}>/ {test.mc.length}</span>
+                      <span style={{ fontSize: 16, fontWeight: 700, color: mcCol, marginLeft: 4 }}>({mcPct}%)</span>
+                    </div>
+                    <div style={{ background: `${C.dark}`, height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 4, maxWidth: 320 }}>
+                      <div style={{ height: "100%", width: `${mcPct}%`, background: mcCol, borderRadius: 3, transition: "width .6s" }} />
+                    </div>
+                    <div style={{ fontSize: 12, color: C.muted }}>Auto-graded · 1 pt each</div>
+                  </div>
+                );
+              })()}
 
-          <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap", marginBottom: 20 }}>
-            {hasMC && (
-              <div>
-                <div style={{ color: C.muted, fontSize: 12 }}>MC Score</div>
-                <div style={{ color: C.white, fontWeight: 700, fontSize: 20 }}>{mcCorrect}/{test.mc.length}</div>
-              </div>
-            )}
-            <div>
-              <div style={{ color: C.muted, fontSize: 12 }}>FRQ Score</div>
-              <div style={{ color: C.white, fontWeight: 700, fontSize: 20 }}>{frqEarned}/{frqPossible}</div>
+              {/* FRQ Score */}
+              {(() => {
+                const frqPct = frqPossible ? Math.round((frqEarned / frqPossible) * 100) : 0;
+                const frqCol = frqPct >= 70 ? C.g : frqPct >= 50 ? C.gold : C.r;
+                return (
+                  <div>
+                    <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: C.muted, marginBottom: 8 }}>Section II — FRQ Score</div>
+                    <div style={{ display: "flex", alignItems: "baseline", gap: 8, marginBottom: 4 }}>
+                      <span style={{ fontSize: 40, fontWeight: 800, color: C.gold }}>{frqEarned}</span>
+                      <span style={{ fontSize: 18, color: C.muted }}>/ {frqPossible}</span>
+                    </div>
+                    <div style={{ background: `${C.dark}`, height: 6, borderRadius: 3, overflow: "hidden", marginBottom: 4, maxWidth: 320 }}>
+                      <div style={{ height: "100%", width: `${frqPct}%`, background: frqCol, borderRadius: 3, transition: "width .6s" }} />
+                    </div>
+                    <div style={{ fontSize: 16, fontWeight: 700, color: frqCol }}>{frqPct}%</div>
+                  </div>
+                );
+              })()}
             </div>
-          </div>
 
-          {/* Per-section breakdown */}
-          <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap" }}>
-            {hasMC && (
-              <div style={{ background: `${C.dark}66`, borderRadius: 10, padding: "10px 16px", minWidth: 120 }}>
-                <div style={{ color: C.muted, fontSize: 11 }}>MC ({SUBJECT_CONFIG.mcWeight}%)</div>
-                <div style={{ color: C.b, fontWeight: 700, fontSize: 16 }}>{mcCorrect}/75</div>
+            {/* Right side: AP Score circle */}
+            <div style={{ textAlign: "center", flexShrink: 0 }}>
+              <div style={{ fontSize: 11, fontWeight: 700, textTransform: "uppercase", letterSpacing: 1.2, color: C.muted, marginBottom: 12 }}>Estimated AP Score</div>
+              <div style={{ width: 120, height: 120, borderRadius: "50%", border: `5px solid ${apColor}`, display: "flex", alignItems: "center", justifyContent: "center", background: `${apColor}12`, margin: "0 auto 10px" }}>
+                <span style={{ fontSize: 52, fontWeight: 800, color: apColor }}>{apScore}</span>
               </div>
-            )}
-            {aaq && (
-              <div style={{ background: `${C.dark}66`, borderRadius: 10, padding: "10px 16px", minWidth: 120 }}>
-                <div style={{ color: C.muted, fontSize: 11 }}>AAQ ({SUBJECT_CONFIG.aaqWeight}%)</div>
-                <div style={{ color: C.gold, fontWeight: 700, fontSize: 16 }}>{aaqEarned}/7</div>
-              </div>
-            )}
-            {ebq && (
-              <div style={{ background: `${C.dark}66`, borderRadius: 10, padding: "10px 16px", minWidth: 120 }}>
-                <div style={{ color: C.muted, fontSize: 11 }}>EBQ ({SUBJECT_CONFIG.ebqWeight}%)</div>
-                <div style={{ color: C.g, fontWeight: 700, fontSize: 16 }}>{ebqEarned}/7</div>
-              </div>
-            )}
-          </div>
-
-          <div style={{ marginTop: 20 }}>
-            <button onClick={() => generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores })}
-              style={{ background: C.b, color: C.dark, border: "none", padding: "10px 20px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: font }}>
-              Download PDF Report
-            </button>
+              <div style={{ color: apColor, fontWeight: 700, fontSize: 15 }}>{apLabel}</div>
+              <div style={{ color: C.muted, fontSize: 12, marginTop: 2 }}>MC + FRQ combined estimate</div>
+            </div>
           </div>
         </div>
 
         {/* AP Score Scale */}
-        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 32 }}>
-          {[1, 2, 3, 4, 5].map(n => (
-            <div key={n} style={{ width: 48, height: 48, borderRadius: 10, background: n === apScore ? AP_SCORE_COLORS[n] : `${C.mid}`, border: `2px solid ${n === apScore ? AP_SCORE_COLORS[n] : C.border}`, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 18, color: n === apScore ? C.dark : C.muted }}>
-              {n}
+        <div style={{ display: "flex", justifyContent: "center", gap: 8, marginBottom: 20 }}>
+          {[5, 4, 3, 2, 1].map(n => {
+            const active = n === apScore;
+            const shortLabels = { 5: "Extremely", 4: "Well Qual.", 3: "Qualified", 2: "Possibly", 1: "No Rec." };
+            return (
+              <div key={n} style={{ flex: 1, maxWidth: 140, borderRadius: 12, padding: "14px 8px", background: active ? AP_SCORE_COLORS[n] : C.mid, border: `2px solid ${active ? AP_SCORE_COLORS[n] : C.border}`, textAlign: "center", transition: "all .2s" }}>
+                <div style={{ fontSize: 24, fontWeight: 800, color: active ? C.dark : C.muted, marginBottom: 2 }}>{n}</div>
+                <div style={{ fontSize: 11, fontWeight: 600, color: active ? C.dark : C.muted }}>{shortLabels[n]}</div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Per-FRQ breakdown cards */}
+        <div style={{ display: "grid", gridTemplateColumns: aaq && ebq ? "1fr 1fr" : "1fr", gap: 12, marginBottom: 20 }}>
+          {aaq && (
+            <div style={{ background: C.mid, border: `1px solid ${C.border}`, borderRadius: 14, padding: "18px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Q1</div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 2 }}>
+                <span style={{ fontSize: 32, fontWeight: 800, color: C.white }}>{aaqEarned}</span>
+                <span style={{ fontSize: 16, color: C.muted }}>/{aaq.points}</span>
+              </div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Article Analysis</div>
             </div>
-          ))}
+          )}
+          {ebq && (
+            <div style={{ background: C.mid, border: `1px solid ${C.border}`, borderRadius: 14, padding: "18px 20px", textAlign: "center" }}>
+              <div style={{ fontSize: 12, fontWeight: 700, color: C.muted, textTransform: "uppercase", letterSpacing: 0.8, marginBottom: 6 }}>Q2</div>
+              <div style={{ display: "flex", alignItems: "baseline", justifyContent: "center", gap: 2 }}>
+                <span style={{ fontSize: 32, fontWeight: 800, color: C.white }}>{ebqEarned}</span>
+                <span style={{ fontSize: 16, color: C.muted }}>/{ebq.points}</span>
+              </div>
+              <div style={{ fontSize: 12, color: C.muted, marginTop: 4 }}>Evidence-Based</div>
+            </div>
+          )}
+        </div>
+
+        {/* Download Report button */}
+        <div style={{ textAlign: "center", marginBottom: 32 }}>
+          <button onClick={() => generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores })}
+            style={{ background: "linear-gradient(135deg, #7c3aed, #6366f1)", color: C.white, border: "none", padding: "14px 32px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 15, fontFamily: font, boxShadow: "0 4px 16px rgba(124,58,237,0.3)", display: "inline-flex", alignItems: "center", gap: 8 }}>
+            📄 Download Report for Teacher
+          </button>
         </div>
 
         {/* MC Review */}
