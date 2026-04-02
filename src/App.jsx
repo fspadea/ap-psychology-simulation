@@ -910,7 +910,7 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers 
 
         {/* Download Report button */}
         <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <button onClick={() => generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores })}
+          <button onClick={() => generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores })}
             style={{ background: "linear-gradient(135deg, #7c3aed, #6366f1)", color: C.white, border: "none", padding: "14px 32px", borderRadius: 12, cursor: "pointer", fontWeight: 700, fontSize: 15, fontFamily: font, boxShadow: "0 4px 16px rgba(124,58,237,0.3)", display: "inline-flex", alignItems: "center", gap: 8 }}>
             📄 Download Report for Teacher
           </button>
@@ -1129,7 +1129,7 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers 
         {/* Bottom buttons */}
         <div style={{ display: "flex", justifyContent: "center", gap: 12, flexWrap: "wrap", marginTop: 32, paddingBottom: 48 }}>
           <button onClick={onRetry} style={{ ...backBtn, borderColor: C.b, color: C.b }}>Retry Exam</button>
-          <button onClick={() => generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores })}
+          <button onClick={() => generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores })}
             style={{ background: C.b, color: C.dark, border: "none", padding: "10px 24px", borderRadius: 8, cursor: "pointer", fontWeight: 600, fontSize: 14, fontFamily: font }}>
             Download PDF
           </button>
@@ -1143,7 +1143,7 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers 
 /* ══════════════════════════════════════════════════════════════
    PDF GENERATION
    ══════════════════════════════════════════════════════════════ */
-function generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores }) {
+function generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers = {}, mcCorrect, aaqEarned, ebqEarned, apScore, apLabel, aiScores, aiFeedback, manualScores }) {
   const esc = str => (str||"").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
   const nl2br = str => esc(str).split("\n").join("<br/>");
   const getS = (key) => manualScores[key] != null ? manualScores[key] : (aiScores[key] != null ? aiScores[key] : 0);
@@ -1152,9 +1152,10 @@ function generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEar
   const hasMC = test.hasMC && test.mc && test.mc.length > 0;
   const aaq = test.frqs.find(f => f.type === "aaq");
   const ebq = test.frqs.find(f => f.type === "ebq");
+  const ebqLegacy = ebq && ebq.legacyFRQ === true;
   const mcTotal = hasMC ? test.mc.length : 0;
   const mcPct = mcTotal ? Math.round((mcCorrect/mcTotal)*100) : 0;
-  const totalFRQEarned = aaqEarned + getS("ebq-total");
+  const totalFRQEarned = aaqEarned + ebqEarned;
   const totalFRQPossible = (aaq ? aaq.points : 0) + (ebq ? ebq.points : 0);
   const frqPct = totalFRQPossible ? Math.round((totalFRQEarned/totalFRQPossible)*100) : 0;
 
@@ -1263,6 +1264,43 @@ function generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEar
 
   /* EBQ block */
   const ebqBlock = ebq ? (() => {
+    if (ebqLegacy) {
+      const legacyPartsHtml = (ebq.parts||[]).map(part => {
+        const key = `ebq-${part.letter}`;
+        const response = ebqPartAnswers[part.letter] || "";
+        const rubric = ebq.rubric.find(r => r.row === part.letter);
+        const maxPts = rubric?.points || 1;
+        const score = getS(key);
+        const fb = aiFeedback[key] || "";
+        return `<div style="margin-bottom:12px;padding:10px 14px;border:1px solid #ccc;border-radius:4px;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;">
+            <strong>Part ${part.letter}</strong>
+            <span class="score-chip">Score: ${score} / ${maxPts}</span>
+          </div>
+          <div style="font-size:11px;color:#555;margin-bottom:6px;font-style:italic;">${esc(part.prompt)}</div>
+          <div class="response-wrap">
+            <div class="response-hdr">\u270F Response \u00b7 ${response.split(/\s+/).filter(Boolean).length} words</div>
+            <div class="response-body ${!response.trim()?"empty":""}">${response.trim()?nl2br(response):"No response submitted."}</div>
+          </div>
+          ${fb?`<div class="ai-fb"><span class="ai-fb-label">\u2726 AI Feedback</span>${nl2br(fb)}</div>`:""}
+        </div>`;
+      }).join("");
+      return `<div class="task-card">
+        <div class="task-hdr">
+          <div class="task-num">2</div>
+          <div>
+            <div class="task-hdr-lbl">Concept Application</div>
+            <div class="task-hdr-name">${esc(ebq.title)} \u00b7 ${ebq.points} points</div>
+          </div>
+          <div class="task-score">${ebqEarned} / ${ebq.points}</div>
+        </div>
+        <div class="task-body">
+          <div class="sec-label">Scenario</div>
+          <div style="font-size:11px;color:#444;margin-bottom:12px;font-style:italic;">${esc(ebq.study?.introduction || "")}</div>
+          ${legacyPartsHtml}
+        </div>
+      </div>`;
+    }
     const key = "ebq-total";
     const score = getS(key);
     const fb = aiFeedback[key] || "";
@@ -1271,15 +1309,15 @@ function generatePDF({ test, mcAnswers, aaqAnswers, ebqAnswer, mcCorrect, aaqEar
         <div class="task-num">2</div>
         <div>
           <div class="task-hdr-lbl">Evidence-Based Question</div>
-          <div class="task-hdr-name">${esc(ebq.topic)} \u00b7 ${ebq.points} points</div>
+          <div class="task-hdr-name">${esc(ebq.topic||"")} \u00b7 ${ebq.points} points</div>
         </div>
         <div class="task-score">${score} / ${ebq.points}</div>
       </div>
       <div class="task-body">
         <div class="sec-label">Topic</div>
-        <div style="font-size:12px;color:#444;margin-bottom:6px;font-style:italic;">${esc(ebq.topic)}</div>
+        <div style="font-size:12px;color:#444;margin-bottom:6px;font-style:italic;">${esc(ebq.topic||"")}</div>
         <div class="sec-label" style="margin-top:10px;">Sources</div>
-        ${ebq.sources.map(s => `<div style="font-size:11px;color:#555;margin-bottom:4px;padding:4px 8px;background:#f7f7f2;border-radius:3px;">
+        ${(ebq.sources||[]).map(s => `<div style="font-size:11px;color:#555;margin-bottom:4px;padding:4px 8px;background:#f7f7f2;border-radius:3px;">
           <strong>Source ${s.num}:</strong> ${esc(s.title)} <span style="color:#888;">— ${esc(s.citation)}</span>
         </div>`).join("")}
         <div class="sec-label" style="margin-top:12px;">Student Essay</div>
