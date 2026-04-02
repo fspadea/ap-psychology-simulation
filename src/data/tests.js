@@ -1905,4 +1905,388 @@ const SIM6 = {
   figures: SIM6_FIGURES,
 };
 
-export const ALL_TESTS = [SIM1, OFFICIAL_2025_SET1, OFFICIAL_2025_SET2, SIM2, SIM3, SIM4, SIM5, SIM6];
+/* ═══════════════════════════════════════════════════════════
+   OFFICIAL 2024 — Set 1 (Old format: 2 concept-application FRQs)
+   ═══════════════════════════════════════════════════════════ */
+const OFFICIAL_2024_SET1 = {
+  id: "official-2024-set1",
+  title: "2024 Official — Set 1",
+  badge: "Official",
+  hasMC: false,
+  figures: {
+    "o24s1-fig1": {
+      type: "bar",
+      title: "Mean Quiz Scores by Paper Color",
+      xLabel: "Paper Color",
+      yLabel: "Mean Quiz Score",
+      data: [
+        { label: "White Paper", value: 5.2 },
+        { label: "Yellow Paper", value: 7.8 },
+      ],
+      note: "Results were statistically significant (p < 0.05)",
+    },
+  },
+  frqs: [
+    {
+      num: 1, type: "aaq", legacyFRQ: true,
+      title: "Concept Application — Gavin at the Museum",
+      points: 7,
+      suggestedTime: 25,
+      study: {
+        title: "Gavin at the Science Museum",
+        citation: "2024 AP Psychology FRQ — Set 1, Question 1",
+        introduction: "Gavin's parents took him to his favorite science museum, and he explored all of the exhibits. One of the interactive exhibits featured glass marbles. He grabbed a large marble and tried to bounce it on the ground. At one point during the visit, he became separated from his parents, and it took a few minutes for them to find him. Later that night, he drew a colorful picture of the exhibits at the museum. The next day, Gavin brought his picture with him to preschool. While his grandmother drove, Gavin talked to her about the picture.",
+        participants: "",
+        method: "",
+        results: "",
+      },
+      parts: [
+        { letter: "A", prompt: "Explain how Jean Piaget's concept of assimilation could relate to Gavin's experience with the glass marble." },
+        { letter: "B", prompt: "Explain how egocentrism could relate to how Gavin interacted with his grandmother in the car." },
+        { letter: "C", prompt: "Explain how avoidant attachment could relate to Gavin when he was separated from his parents." },
+        { letter: "D", prompt: "Explain how the serial position effect could relate to Gavin in this scenario." },
+        { letter: "E", prompt: "Explain how the motor cortex could relate to Gavin in this scenario." },
+        { letter: "F", prompt: "Explain how a cognitive map could relate to Gavin in this scenario." },
+        { letter: "G", prompt: "Explain how cones in the retina could relate to Gavin in this scenario." },
+      ],
+      rubric: [
+        { row: "A", category: "Assimilation", points: 1, description: "Gavin tried to bounce the glass marble because he assimilated it into his existing schema for rubber/bouncy balls." },
+        { row: "B", category: "Egocentrism", points: 1, description: "Gavin assumes his grandmother can see the picture he is describing even though she is driving and cannot look at it — he cannot take her perspective." },
+        { row: "C", category: "Avoidant Attachment", points: 1, description: "Gavin showed little distress when separated from his parents, consistent with avoidant attachment." },
+        { row: "D", category: "Serial Position Effect", points: 1, description: "Gavin is more likely to recall exhibits he saw first (primacy) or last (recency) at the museum." },
+        { row: "E", category: "Motor Cortex", points: 1, description: "The motor cortex controls voluntary movement — Gavin used it to grab the marble, draw the picture, or bounce the marble." },
+        { row: "F", category: "Cognitive Map", points: 1, description: "Gavin could have formed a mental representation of the museum layout to navigate between exhibits." },
+        { row: "G", category: "Cones", points: 1, description: "Cones in the retina detect color and fine detail — Gavin used them to see the colorful exhibits and draw his colorful picture." },
+      ],
+    },
+    {
+      num: 2, type: "ebq", legacyFRQ: true,
+      title: "Concept Application — Professor Gonzalez's Study",
+      points: 7,
+      suggestedTime: 25,
+      topic: "Paper color and memory performance",
+      study: {
+        title: "Professor Gonzalez's Paper Color Experiment",
+        citation: "2024 AP Psychology FRQ — Set 1, Question 2",
+        introduction: "Professor Gonzalez hypothesizes that students will remember more information from his detailed course description if it is printed on yellow paper than if it is printed on standard white paper. To test this hypothesis, he put the names of all his students into a bowl, then drew out names to assign them to two different groups. He gave one group of the students in his class a course description printed on white paper, and gave the other group of students a course description printed on yellow paper. Students were instructed to thoroughly read the description outside of class in preparation for their next class. In the next class, he gave all students a ten-question quiz asking them about the information found on the course description. Professor Gonzalez then compared the number of correct answers for each group of students. The statistically significant results are depicted in the graph.",
+        participants: "",
+        method: "",
+        results: "",
+      },
+      figureId: "o24s1-fig1",
+      parts: [
+        { letter: "A", prompt: "State the operational definition of the dependent variable." },
+        { letter: "B", prompt: "Identify the experimental group." },
+        { letter: "C", prompt: "In addition to the manipulation of an independent variable, identify the procedure Professor Gonzalez used to make this study a true experiment." },
+        { letter: "D", prompt: "Explain how the data as presented in the graph do or do not support Professor Gonzalez's hypothesis." },
+        { letter: "E", prompt: "Explain how context-dependent memory might relate to a student's performance on any quiz." },
+        { letter: "F", prompt: "Explain how the Yerkes-Dodson law might relate to a student's performance on any quiz." },
+        { letter: "G", prompt: "Explain how a low level of the Big Five trait of conscientiousness might relate to a student's performance on any quiz." },
+      ],
+      rubric: [
+        { row: "A", category: "Operational Definition of DV", points: 1, description: "The number of correct answers on the ten-question quiz about the course description." },
+        { row: "B", category: "Experimental Group", points: 1, description: "The group that received the course description printed on yellow paper." },
+        { row: "C", category: "True Experiment", points: 1, description: "Random assignment — Professor Gonzalez randomly drew names from a bowl to assign students to groups." },
+        { row: "D", category: "Data Interpretation", points: 1, description: "The data support the hypothesis because the yellow paper group scored higher than the white paper group, and the results were statistically significant." },
+        { row: "E", category: "Context-Dependent Memory", points: 1, description: "A student might perform better on a quiz if the study environment matches the testing environment." },
+        { row: "F", category: "Yerkes-Dodson Law", points: 1, description: "Moderate arousal leads to optimal performance; too little or too much anxiety/stress would hurt quiz performance." },
+        { row: "G", category: "Conscientiousness", points: 1, description: "A student low in conscientiousness might be less organized, less diligent in studying, leading to poorer quiz performance." },
+      ],
+    },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════
+   OFFICIAL 2024 — Set 2 (Old format: 2 concept-application FRQs)
+   ═══════════════════════════════════════════════════════════ */
+const OFFICIAL_2024_SET2 = {
+  id: "official-2024-set2",
+  title: "2024 Official — Set 2",
+  badge: "Official",
+  hasMC: false,
+  figures: {
+    "o24s2-fig1": {
+      type: "bar",
+      title: "Mean Anxiety Ratings by Condition",
+      xLabel: "Condition",
+      yLabel: "Mean Anxiety Rating (1-8)",
+      data: [
+        { label: "Motivational\nStatements", value: 2.8 },
+        { label: "Neutral\nStatements", value: 5.6 },
+      ],
+      note: "Results were statistically significant (p < 0.05). Scale: 1 = low anxiety, 8 = high anxiety.",
+    },
+  },
+  frqs: [
+    {
+      num: 1, type: "aaq", legacyFRQ: true,
+      title: "Concept Application — Claire's Championship Game",
+      points: 7,
+      suggestedTime: 25,
+      study: {
+        title: "Claire's Championship Basketball Game",
+        citation: "2024 AP Psychology FRQ — Set 2, Question 1",
+        introduction: "Claire's sports team made it to the championship basketball game. To play the game, the teammates will need to work together to move a ball toward their own goal. They must then aim carefully to throw the ball into a hoop that is elevated about 10 feet off the ground. The winner is the team that gets the ball into the hoop the most times.",
+        participants: "",
+        method: "Claire's team won the championship game. Ten years later, the team got together for a reunion at the gym where the game was originally held. At the reunion, they discussed the championship game.",
+        results: "",
+      },
+      parts: [
+        { letter: "A", prompt: "Explain how retinal disparity might help Claire be successful during the game." },
+        { letter: "B", prompt: "Explain how intrinsic motivation might help Claire be successful during the game." },
+        { letter: "C", prompt: "Explain how social facilitation might help Claire be successful during the game." },
+        { letter: "D", prompt: "Explain how kinesthetic sense might help Claire be successful during the game." },
+        { letter: "E", prompt: "Explain how context-dependent memory might influence Claire's recollection of the game at the reunion." },
+        { letter: "F", prompt: "Explain how self-serving bias might influence Claire's recollection of the game at the reunion." },
+        { letter: "G", prompt: "Explain how retroactive interference might influence Claire's recollection of the game at the reunion." },
+      ],
+      rubric: [
+        { row: "A", category: "Retinal Disparity", points: 1, description: "Retinal disparity helps judge depth/distance — Claire uses it to aim the ball at the hoop and judge distances on the court." },
+        { row: "B", category: "Intrinsic Motivation", points: 1, description: "Claire plays because she enjoys the game itself, not just for external rewards." },
+        { row: "C", category: "Social Facilitation", points: 1, description: "Claire performs better on well-practiced skills because of the audience/crowd at the championship." },
+        { row: "D", category: "Kinesthetic Sense", points: 1, description: "Kinesthetic sense provides awareness of body position and movement, helping Claire coordinate shooting, running, and passing." },
+        { row: "E", category: "Context-Dependent Memory", points: 1, description: "Being in the same gym (context) where the game took place helps Claire recall more details about the championship." },
+        { row: "F", category: "Self-Serving Bias", points: 1, description: "Claire may attribute the team's success to her own skill while attributing any mistakes to external factors." },
+        { row: "G", category: "Retroactive Interference", points: 1, description: "New experiences and memories from the past 10 years may interfere with Claire's ability to accurately recall the championship game." },
+      ],
+    },
+    {
+      num: 2, type: "ebq", legacyFRQ: true,
+      title: "Concept Application — Dr. Dawson's Study",
+      points: 7,
+      suggestedTime: 25,
+      topic: "Motivational statements and test anxiety",
+      study: {
+        title: "Dr. Dawson's Motivational Statements Experiment",
+        citation: "2024 AP Psychology FRQ — Set 2, Question 2",
+        introduction: "Dr. Dawson is a psychologist who believes that students who read motivational statements before a test will experience lower levels of anxiety as compared with students who read neutral statements. To examine this belief, he conducted a study. In the study, he randomly assigned half of the participants to read motivational statements and the other half to read neutral statements. Immediately after reading the statements, all of the students completed a survey about their current level of anxiety (1 = low; 8 = high) and then took the test. Dr. Dawson found statistically significant results that are depicted in the graph.",
+        participants: "",
+        method: "",
+        results: "",
+      },
+      figureId: "o24s2-fig1",
+      parts: [
+        { letter: "A", prompt: "State a valid operational definition of the dependent variable in this study." },
+        { letter: "B", prompt: "Identify the control group in this study." },
+        { letter: "C", prompt: "Explain why the study would be considered an experiment." },
+        { letter: "D", prompt: "Explain how the results of the study do or do not support Dr. Dawson's hypothesis." },
+        { letter: "E", prompt: "Explain how external locus of control might relate to the students who performed poorly on the test." },
+        { letter: "F", prompt: "Explain how stage one of Selye's general adaptation syndrome might relate to the students who performed poorly on the test." },
+        { letter: "G", prompt: "Explain how crystallized intelligence might relate to the students who performed poorly on the test." },
+      ],
+      rubric: [
+        { row: "A", category: "Operational Definition of DV", points: 1, description: "The participants' self-reported anxiety rating on a scale of 1 (low) to 8 (high)." },
+        { row: "B", category: "Control Group", points: 1, description: "The group that read neutral statements." },
+        { row: "C", category: "Experiment Justification", points: 1, description: "It is an experiment because Dr. Dawson randomly assigned participants to conditions (manipulation of IV + random assignment)." },
+        { row: "D", category: "Data Interpretation", points: 1, description: "The results support the hypothesis — the motivational statements group had lower anxiety ratings than the neutral statements group." },
+        { row: "E", category: "External Locus of Control", points: 1, description: "Students with external locus of control believe outcomes are beyond their control, leading to less effort and poorer performance." },
+        { row: "F", category: "GAS Stage 1 (Alarm)", points: 1, description: "The alarm stage activates the sympathetic nervous system/fight-or-flight, which can interfere with cognitive performance on the test." },
+        { row: "G", category: "Crystallized Intelligence", points: 1, description: "Students with low crystallized intelligence (accumulated knowledge/vocabulary) would have difficulty on a vocabulary test." },
+      ],
+    },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════
+   OFFICIAL 2023 — Set 1 (Old format: 2 concept-application FRQs)
+   ═══════════════════════════════════════════════════════════ */
+const OFFICIAL_2023_SET1_FIGURES = {
+  "o23s1-table": {
+    type: "table",
+    title: "Electric Cars Sold by Store",
+    headers: ["Month", "Store A (supportive)", "Store B (strict)", "Store C (distant)"],
+    rows: [
+      ["January", "9", "7", "3"],
+      ["February", "7", "8", "2"],
+      ["March", "9", "5", "5"],
+      ["April", "5", "3", "4"],
+      ["May", "5", "2", "1"],
+    ],
+  },
+};
+
+const OFFICIAL_2023_SET1 = {
+  id: "official-2023-set1",
+  title: "2023 Official — Set 1",
+  badge: "Official",
+  hasMC: false,
+  figures: OFFICIAL_2023_SET1_FIGURES,
+  frqs: [
+    {
+      num: 1, type: "aaq", legacyFRQ: true,
+      title: "Concept Application — Steve's Morning",
+      points: 7,
+      suggestedTime: 25,
+      study: {
+        title: "Steve Making Breakfast",
+        citation: "2023 AP Psychology FRQ — Set 1, Question 1",
+        introduction: "Steve is in the kitchen happily making breakfast for his four children, who are all playing together in the living room. After hearing a loud crash, Steve becomes quite upset and rushes into the living room, where he sees a lamp shattered on the floor. The children are watching television, and no one is trying to clean up the lamp.\n\nInstead of asking the children what happened, Steve immediately turns off the television and sends them all outside to rake the large amount of leaves in the backyard. Steve stays irritable for the rest of the day.",
+        participants: "",
+        method: "",
+        results: "",
+      },
+      parts: [
+        { letter: "A", prompt: "Explain how soundwave amplitude relates to the scenario." },
+        { letter: "B", prompt: "Explain how procedural memory relates to the scenario." },
+        { letter: "C", prompt: "Explain how diffusion of responsibility relates to the scenario." },
+        { letter: "D", prompt: "Explain how dispositional attribution relates to the scenario." },
+        { letter: "E", prompt: "Explain how ghrelin relates to the scenario." },
+        { letter: "F", prompt: "Explain how the authoritarian parenting style relates to the scenario." },
+        { letter: "G", prompt: "Explain how Steve's high level of the Big Five trait of neuroticism relates to the scenario." },
+      ],
+      rubric: [
+        { row: "A", category: "Soundwave Amplitude", points: 1, description: "The loud crash had high amplitude soundwaves, which is why Steve heard it from the kitchen." },
+        { row: "B", category: "Procedural Memory", points: 1, description: "Steve uses procedural memory (implicit) for the well-practiced skill of making breakfast." },
+        { row: "C", category: "Diffusion of Responsibility", points: 1, description: "None of the four children clean up because each assumes another sibling will do it." },
+        { row: "D", category: "Dispositional Attribution", points: 1, description: "Steve attributes the broken lamp to the children's behavior (internal/dispositional) rather than situational factors." },
+        { row: "E", category: "Ghrelin", points: 1, description: "Ghrelin is a hunger hormone — Steve may be making breakfast because ghrelin signals are triggering hunger for him or the children." },
+        { row: "F", category: "Authoritarian Parenting", points: 1, description: "Steve demonstrates authoritarian parenting by demanding obedience without explanation — he sends children outside without asking what happened." },
+        { row: "G", category: "Neuroticism", points: 1, description: "Steve's high neuroticism is shown by his intense emotional reaction to the crash and remaining irritable for the rest of the day." },
+      ],
+    },
+    {
+      num: 2, type: "ebq", legacyFRQ: true,
+      title: "Concept Application — Michael's Car Sales Study",
+      points: 7,
+      suggestedTime: 25,
+      topic: "Management styles and car sales",
+      study: {
+        title: "Michael's Electric Car Sales Study",
+        citation: "2023 AP Psychology FRQ — Set 1, Question 2",
+        introduction: "Michael is the regional manager for a car company and needs to give a presentation to the president of the company about how different management styles might relate to the total number of sales of the company's new electric car. He hires an industrial/organizational psychologist to study three stores, each in a different city. Each store's manager has their own distinct management style:\n- Store A: supportive style (open and warm)\n- Store B: strict style (rigid and severe)\n- Store C: distant style (permissive and disengaged), managed by Michael's good friend\n\nThe number of electric cars sold at each store over a five-month period is shown in the table.",
+        participants: "",
+        method: "",
+        results: "",
+        dataTable: {
+          title: "Electric Cars Sold by Store",
+          headers: ["Month", "Store A (supportive)", "Store B (strict)", "Store C (distant)"],
+          rows: [
+            ["January", "9", "7", "3"],
+            ["February", "7", "8", "2"],
+            ["March", "9", "5", "5"],
+            ["April", "5", "3", "4"],
+            ["May", "5", "2", "1"],
+          ],
+        },
+      },
+      parts: [
+        { letter: "A", prompt: "Explain why this study is not a true experiment." },
+        { letter: "B", prompt: "Identify the implied dependent variable for the study if the study had been a true experiment." },
+        { letter: "C", prompt: "Calculate the mean of Store B's sales." },
+        { letter: "D", prompt: "Explain why the location of the store is a confounding variable in this study." },
+        { letter: "E", prompt: "Explain how the halo effect could influence Michael's interpretation of the findings." },
+        { letter: "F", prompt: "Explain why the hiring of an industrial/organizational psychologist was appropriate for this study." },
+        { letter: "G", prompt: "Explain how Michael could use positive reinforcement to help him finish his presentation by the deadline." },
+      ],
+      rubric: [
+        { row: "A", category: "Not a True Experiment", points: 1, description: "There was no random assignment of managers to stores, and the IV (management style) was not manipulated by the researcher." },
+        { row: "B", category: "Dependent Variable", points: 1, description: "The number of electric cars sold at each store." },
+        { row: "C", category: "Mean Calculation", points: 1, description: "Store B mean = (7 + 8 + 5 + 3 + 2) / 5 = 25 / 5 = 5.0" },
+        { row: "D", category: "Confounding Variable", points: 1, description: "Each store is in a different city, so differences in sales could be due to location factors rather than management style." },
+        { row: "E", category: "Halo Effect", points: 1, description: "Michael might view Store C's results more favorably because the manager is his good friend — his positive feelings about the person bias his judgment." },
+        { row: "F", category: "I/O Psychology", points: 1, description: "I/O psychologists specialize in workplace behavior, management effectiveness, and organizational productivity — directly relevant to this study." },
+        { row: "G", category: "Positive Reinforcement", points: 1, description: "Michael could reward himself with something pleasant (e.g., a treat, break) after completing sections of the presentation to increase the behavior of working on it." },
+      ],
+    },
+  ],
+};
+
+/* ═══════════════════════════════════════════════════════════
+   OFFICIAL 2023 — Set 2 (Old format: 2 concept-application FRQs)
+   ═══════════════════════════════════════════════════════════ */
+const OFFICIAL_2023_SET2_FIGURES = {
+  "o23s2-table": {
+    type: "table",
+    title: "Participants' Ratings of Likelihood to Buy Game",
+    headers: ["", "Observed Demo (n=50)", "Played Game (n=50)", "p value"],
+    rows: [
+      ["Mean", "6.31", "2.04", "< 0.001"],
+      ["Standard Deviation", "1.25", "0.80", ""],
+    ],
+  },
+};
+
+const OFFICIAL_2023_SET2 = {
+  id: "official-2023-set2",
+  title: "2023 Official — Set 2",
+  badge: "Official",
+  hasMC: false,
+  figures: OFFICIAL_2023_SET2_FIGURES,
+  frqs: [
+    {
+      num: 1, type: "aaq", legacyFRQ: true,
+      title: "Concept Application — Jordan's New School",
+      points: 7,
+      suggestedTime: 25,
+      study: {
+        title: "Jordan Adjusting to a New School",
+        citation: "2023 AP Psychology FRQ — Set 2, Question 1",
+        introduction: "Jordan recently moved to a new school for her senior year of high school, and she has been adjusting to her new environment.\n\nJordan tries out for and makes the debate team. Jordan has made friends with other members of the team, and she really enjoys sitting with them at lunch every day. The coach is impressed with Jordan's debate skills, so he makes her captain of the team. When Jordan starts to help the coach plan for the next big debate, her friends stop sitting with her at lunch. She then stops helping the coach plan for the next debate but ends up winning it.",
+        participants: "",
+        method: "",
+        results: "",
+      },
+      parts: [
+        { letter: "A", prompt: "Explain how the spotlight effect relates to Jordan's adjustment to her new school." },
+        { letter: "B", prompt: "Explain how a cognitive map relates to Jordan's adjustment to her new school." },
+        { letter: "C", prompt: "Explain how Jordan's low level of the Big Five trait of extraversion relates to her adjustment to her new school." },
+        { letter: "D", prompt: "Explain how negative punishment relates to the scenario." },
+        { letter: "E", prompt: "Explain how Piaget's formal operational stage of cognitive development relates to the scenario." },
+        { letter: "F", prompt: "Explain how actor-observer bias concerning Jordan's debate performance relates to the scenario." },
+        { letter: "G", prompt: "Explain how Jordan's high level of self-efficacy relates to the scenario." },
+      ],
+      rubric: [
+        { row: "A", category: "Spotlight Effect", points: 1, description: "Jordan overestimates how much others notice her as the new student — she feels everyone is watching/judging her." },
+        { row: "B", category: "Cognitive Map", points: 1, description: "Jordan needs to form a mental representation of the new school layout to navigate between classes." },
+        { row: "C", category: "Low Extraversion", points: 1, description: "Jordan's low extraversion makes adjusting harder as she is less outgoing and may struggle to initiate social interactions." },
+        { row: "D", category: "Negative Punishment", points: 1, description: "Jordan's friends removed a pleasant stimulus (sitting with her at lunch) when she helped the coach, decreasing her helping behavior." },
+        { row: "E", category: "Formal Operational Stage", points: 1, description: "Jordan can think abstractly and hypothetically about debate strategies and complex arguments." },
+        { row: "F", category: "Actor-Observer Bias", points: 1, description: "Jordan attributes her debate success to her own skill (dispositional), while others may attribute it to situational factors." },
+        { row: "G", category: "High Self-Efficacy", points: 1, description: "Jordan's belief in her own ability helps her win the debate even without her friends' support." },
+      ],
+    },
+    {
+      num: 2, type: "ebq", legacyFRQ: true,
+      title: "Concept Application — Mobile Gamer Central Study",
+      points: 7,
+      suggestedTime: 25,
+      topic: "Marketing effectiveness for a game app",
+      study: {
+        title: "Mobile Gamer Central Marketing Study",
+        citation: "2023 AP Psychology FRQ — Set 2, Question 2",
+        introduction: "Mobile Gamer Central (MGC) is preparing to launch a new game app. The advertisements for this new game are brightly colored, have lively music, and feature celebrities playing the game. To generate interest in the game, MGC pays to have these advertisements pop up multiple times while people are using other apps on their phone. The marketing director is pleased with the advertising campaign and thinks the game is really fun to play.\n\nAfter a few weeks with moderate success, MGC's marketing director decides to test the most effective ways to increase sales of the game. Marketing researchers recruit 100 people to play the new game. They randomly assign half of the people to observe someone demonstrating how the game is played and assign the other half of the people to play the video game themselves. Participants rate how likely they are to buy the game on a scale of 1 (not likely) through 10 (very likely). Results are presented in the table.",
+        participants: "",
+        method: "",
+        results: "",
+        dataTable: {
+          title: "Participants' Ratings of Likelihood to Buy Game",
+          headers: ["", "Observed Demo (n=50)", "Played Game (n=50)", "p value"],
+          rows: [
+            ["Mean", "6.31", "2.04", "< 0.001"],
+            ["Standard Deviation", "1.25", "0.80", ""],
+          ],
+        },
+      },
+      parts: [
+        { letter: "A", prompt: "Explain how the peripheral route to persuasion relates to the advertising scenario." },
+        { letter: "B", prompt: "Explain how the false consensus effect relates to the marketing director in the scenario." },
+        { letter: "C", prompt: "Explain how the mere-exposure effect relates to the advertising scenario." },
+        { letter: "D", prompt: "Identify the operational definition of the dependent variable in the study." },
+        { letter: "E", prompt: "Explain what the difference between the standard deviations in the study indicates." },
+        { letter: "F", prompt: "Explain why random assignment is necessary for determining cause and effect in the study." },
+        { letter: "G", prompt: "Explain what the p value allows MGC to conclude about the study." },
+      ],
+      rubric: [
+        { row: "A", category: "Peripheral Route", points: 1, description: "The ads use bright colors, music, and celebrities — peripheral cues rather than logical arguments about the game's quality." },
+        { row: "B", category: "False Consensus Effect", points: 1, description: "The marketing director thinks the game is fun and overestimates how many others share that opinion." },
+        { row: "C", category: "Mere-Exposure Effect", points: 1, description: "Repeatedly showing the ad builds familiarity, which increases people's liking of the game." },
+        { row: "D", category: "Operational Definition of DV", points: 1, description: "Participants' rating of how likely they are to buy the game on a scale of 1 (not likely) to 10 (very likely)." },
+        { row: "E", category: "Standard Deviation", points: 1, description: "The observed demo group (SD=1.25) had more variability in ratings than the played game group (SD=0.80), meaning responses were more spread out." },
+        { row: "F", category: "Random Assignment", points: 1, description: "Random assignment controls for pre-existing differences between groups, allowing researchers to attribute differences in ratings to the IV." },
+        { row: "G", category: "P Value", points: 1, description: "The p < 0.001 means the difference between groups is very unlikely due to chance, so MGC can conclude the difference is statistically significant." },
+      ],
+    },
+  ],
+};
+
+export const ALL_TESTS = [SIM1, OFFICIAL_2025_SET1, OFFICIAL_2025_SET2, OFFICIAL_2024_SET1, OFFICIAL_2024_SET2, OFFICIAL_2023_SET1, OFFICIAL_2023_SET2, SIM2, SIM3, SIM4, SIM5, SIM6];

@@ -489,6 +489,7 @@ function ExamScreen({ test, onFinish }) {
 
   /* EBQ state */
   const [ebqAnswer, setEbqAnswer] = useState("");
+  const [ebqPartAnswers, setEbqPartAnswers] = useState({}); /* for legacy (2023-2024) multi-part Q2 */
 
   /* Timer */
   const phaseTime = phase === "mc" ? SUBJECT_CONFIG.mcTime * 60 : phase === "aaq" ? SUBJECT_CONFIG.aaqTime * 60 : SUBJECT_CONFIG.ebqTime * 60;
@@ -511,8 +512,9 @@ function ExamScreen({ test, onFinish }) {
         mcAnswers={mcAnswers}
         aaqAnswers={aaqAnswers}
         ebqAnswer={ebqAnswer}
+        ebqPartAnswers={ebqPartAnswers}
         onHome={onFinish}
-        onRetry={() => { setSubmitted(false); setPhase(hasMC ? "mc" : "aaq"); setCurrentMC(1); setMcAnswers({}); setAaqAnswers({}); setEbqAnswer(""); }}
+        onRetry={() => { setSubmitted(false); setPhase(hasMC ? "mc" : "aaq"); setCurrentMC(1); setMcAnswers({}); setAaqAnswers({}); setEbqAnswer(""); setEbqPartAnswers({}); }}
       />
     );
   }
@@ -625,8 +627,8 @@ function ExamScreen({ test, onFinish }) {
         {noiseBg}
         <div style={stickyHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ color: C.white, fontWeight: 700, fontSize: 15 }}>Section II — Q1: Article Analysis Question</span>
-            <span style={{ color: C.muted, fontSize: 13 }}>7 points</span>
+            <span style={{ color: C.white, fontWeight: 700, fontSize: 15 }}>Section II — Q1: {aaq.legacyFRQ ? "Concept Application" : "Article Analysis Question"}</span>
+            <span style={{ color: C.muted, fontSize: 13 }}>{aaq.points} points</span>
           </div>
           <Timer seconds={timeLeft} />
         </div>
@@ -646,18 +648,22 @@ function ExamScreen({ test, onFinish }) {
 
   /* ── EBQ Phase ── */
   if (phase === "ebq" && ebq) {
+    const isLegacy = ebq.legacyFRQ === true;
     return (
       <div style={{ minHeight: "100vh", background: gradient, fontFamily: font }}>
         {noiseBg}
         <div style={stickyHeader}>
           <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
-            <span style={{ color: C.white, fontWeight: 700, fontSize: 15 }}>Section II — Q2: Evidence-Based Question</span>
-            <span style={{ color: C.muted, fontSize: 13 }}>7 points</span>
+            <span style={{ color: C.white, fontWeight: 700, fontSize: 15 }}>Section II — Q2: {isLegacy ? "Concept Application" : "Evidence-Based Question"}</span>
+            <span style={{ color: C.muted, fontSize: 13 }}>{ebq.points} points</span>
           </div>
           <Timer seconds={timeLeft} />
         </div>
         <div style={{ maxWidth: 900, margin: "0 auto", padding: mob ? "16px" : "24px" }}>
-          <EBQTask question={ebq} answer={ebqAnswer} onChange={setEbqAnswer} />
+          {isLegacy
+            ? <AAQTask question={ebq} answers={ebqPartAnswers} onChange={(letter, val) => setEbqPartAnswers(p => ({ ...p, [letter]: val }))} />
+            : <EBQTask question={ebq} answer={ebqAnswer} onChange={setEbqAnswer} />
+          }
           <div style={{ display: "flex", justifyContent: "space-between", marginTop: 24 }}>
             <button onClick={() => setPhase("aaq")} style={backBtn}>&larr; Back to AAQ</button>
             <button onClick={handleSubmit}
@@ -676,7 +682,7 @@ function ExamScreen({ test, onFinish }) {
 /* ══════════════════════════════════════════════════════════════
    RESULTS SCREEN
    ══════════════════════════════════════════════════════════════ */
-function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry }) {
+function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, ebqPartAnswers = {}, onHome, onRetry }) {
   const mob = useMobile();
   const hasMC = test.hasMC && test.mc && test.mc.length > 0;
   const aaq = test.frqs.find(f => f.type === "aaq");
@@ -691,6 +697,7 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
   const buildDefaultExpanded = () => {
     const exp = { "ebq-detail": true };
     if (aaq) aaq.parts.forEach(p => { exp[`aaq-${p.letter}`] = true; });
+    if (ebq && ebq.legacyFRQ && ebq.parts) ebq.parts.forEach(p => { exp[`ebq-${p.letter}`] = true; });
     return exp;
   };
   const [expanded, setExpanded] = useState(buildDefaultExpanded);
@@ -706,7 +713,14 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
     const maxPts = aaq.rubric.find(r => r.row === part.letter)?.points || 1;
     return sum + Math.min(getScore(key), maxPts);
   }, 0) : 0;
-  const ebqEarned = getScore("ebq-total", 0);
+  const ebqIsLegacy = ebq && ebq.legacyFRQ === true;
+  const ebqEarned = ebqIsLegacy
+    ? (ebq ? ebq.parts.reduce((sum, part) => {
+        const key = `ebq-${part.letter}`;
+        const maxPts = ebq.rubric.find(r => r.row === part.letter)?.points || 1;
+        return sum + Math.min(getScore(key), maxPts);
+      }, 0) : 0)
+    : getScore("ebq-total", 0);
 
   const frqEarned = aaqEarned + ebqEarned;
   const frqPossible = (aaq ? aaq.points : 0) + (ebq ? ebq.points : 0);
@@ -768,7 +782,19 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
     }
 
     /* EBQ scoring */
-    if (ebq && ebqAnswer.trim()) {
+    if (ebq && ebq.legacyFRQ) {
+      /* Legacy (2023-2024) per-part scoring */
+      ebq.parts.forEach((part) => {
+        const response = ebqPartAnswers[part.letter] || "";
+        if (!response.trim()) return;
+        const rubricItem = ebq.rubric.find(r => r.row === part.letter);
+        const maxPts = rubricItem?.points || 1;
+        const key = `ebq-${part.letter}`;
+        const sys = `You are an expert AP Psychology exam grader. Evaluate the student's response to this concept-application prompt against the rubric. Scenario: ${ebq.study?.introduction || ebq.title}. Rubric: ${rubricItem?.description || ""}. Maximum points: ${maxPts}. Return ONLY valid JSON: {"score": <integer 0-${maxPts}>, "feedback": "<2-3 sentence feedback>"}`;
+        const usr = `Prompt: ${part.prompt}\n\nStudent response: ${response}`;
+        tasks.push({ key, sys, usr, maxPts });
+      });
+    } else if (ebq && ebqAnswer.trim()) {
       const sys = `You are an expert AP Psychology exam grader specializing in Evidence-Based Questions (EBQ). Evaluate the student's essay against the full EBQ rubric (7 points total). Topic: ${ebq.topic}. Score: Claim (0-1), Evidence from Sources (0-2), Evidence from AP Knowledge (0-2), Reasoning (0-2). Return ONLY valid JSON: {"score": <integer 0-7>, "feedback": "<3-5 sentence feedback>"}`;
       const usr = `Topic: ${ebq.topic}\n\nSources provided:\n${ebq.sources.map(s => `Source ${s.num}: ${s.title} - ${s.summary.slice(0, 200)}...`).join("\n")}\n\nStudent essay:\n${ebqAnswer}`;
       tasks.push({ key: "ebq-total", sys, usr, maxPts: 7 });
@@ -1002,65 +1028,98 @@ function ResultsScreen({ test, mcAnswers, aaqAnswers, ebqAnswer, onHome, onRetry
           </div>
         )}
 
-        {/* EBQ Review */}
+        {/* EBQ / Legacy Q2 Review */}
         {ebq && (
           <div style={{ marginBottom: 32 }}>
-            <h3 style={{ color: C.white, fontSize: 18, fontWeight: 700, marginBottom: 16 }}>Evidence-Based Question Review</h3>
+            <h3 style={{ color: C.white, fontSize: 18, fontWeight: 700, marginBottom: 16 }}>{ebqIsLegacy ? "Question 2 — Concept Application Review" : "Evidence-Based Question Review"}</h3>
             <div style={{ background: C.mid, border: `1px solid ${C.border}`, borderRadius: 12, overflow: "hidden" }}>
               <div style={{ padding: "12px 16px", background: `${C.dark}44`, borderBottom: `1px solid ${C.border}`, display: "flex", justifyContent: "space-between", alignItems: "center", cursor: "pointer" }}
                 onClick={() => toggleExpand("ebq-detail")}>
-                <span style={{ color: C.white, fontWeight: 600, fontSize: 14 }}>Topic: {ebq.topic}</span>
-                <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
-                  <span style={{ color: ebqEarned > 0 ? C.g : C.r, fontWeight: 700, fontSize: 14 }}>{ebqEarned}/7</span>
-                  {loadingKeys["ebq-total"] && <div style={{ width: 14, height: 14, border: `2px solid ${C.b}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin .8s linear infinite" }} />}
-                </div>
+                <span style={{ color: C.white, fontWeight: 600, fontSize: 14 }}>{ebqIsLegacy ? ebq.title : `Topic: ${ebq.topic}`}</span>
+                <span style={{ color: ebqEarned > 0 ? C.g : C.r, fontWeight: 700, fontSize: 14 }}>{ebqEarned}/{ebq.points}</span>
               </div>
               {expanded["ebq-detail"] && (
                 <div style={{ padding: 16 }}>
-                  <div style={{ marginBottom: 12 }}>
-                    {ebq.sources.map(src => (
-                      <div key={src.num} style={{ marginBottom: 8, padding: "8px 12px", background: `${C.dark}44`, borderRadius: 8 }}>
-                        <div style={{ color: C.b, fontSize: 12, fontWeight: 700 }}>Source {src.num}: {src.title}</div>
-                        <div style={{ color: C.muted, fontSize: 11, fontStyle: "italic" }}>{src.citation}</div>
-                      </div>
-                    ))}
-                  </div>
-                  <div style={{ color: C.muted, fontSize: 12, marginBottom: 4, fontWeight: 600 }}>Your Essay:</div>
-                  <div style={{ background: `${C.dark}66`, borderRadius: 8, padding: 12, marginBottom: 12 }}>
-                    <div style={{ color: C.white, fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{ebqAnswer || "(No response)"}</div>
-                    <div style={{ color: C.muted, fontSize: 11, marginTop: 4 }}>{(ebqAnswer || "").trim().split(/\s+/).filter(Boolean).length} words</div>
-                  </div>
-                  <FeedbackBox feedback={aiFeedback["ebq-total"]} loading={loadingKeys["ebq-total"]} />
-                  <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
-                    <span style={{ color: C.muted, fontSize: 12, marginRight: 4 }}>Override:</span>
-                    {Array.from({ length: 8 }, (_, n) => (
-                      <button key={n} onClick={() => setManualScores(p => ({ ...p, "ebq-total": n }))}
-                        style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${manualScores["ebq-total"] === n ? C.g : C.border}`, background: manualScores["ebq-total"] === n ? `${C.g}33` : C.mid, color: manualScores["ebq-total"] === n ? C.g : C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: font }}>
-                        {n}
-                      </button>
-                    ))}
-                  </div>
-                  <div style={{ marginTop: 12 }}>
-                    <div style={{ color: C.gold, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Rubric Breakdown</div>
-                    <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
-                      <thead>
-                        <tr>
-                          {["Category", "Points", "Description"].map(h => (
-                            <th key={h} style={{ color: C.gold, fontWeight: 700, padding: "6px 10px", borderBottom: `1px solid ${C.border}`, textAlign: "left" }}>{h}</th>
-                          ))}
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {ebq.rubric.map((r, i) => (
-                          <tr key={i} style={{ borderBottom: `1px solid ${C.border}33` }}>
-                            <td style={{ padding: "6px 10px", color: C.white, fontWeight: 600 }}>{r.category}</td>
-                            <td style={{ padding: "6px 10px", color: C.muted, textAlign: "center" }}>{r.points}</td>
-                            <td style={{ padding: "6px 10px", color: C.muted, lineHeight: 1.4 }}>{r.description}</td>
-                          </tr>
+                  {ebqIsLegacy ? (
+                    /* Legacy per-part review (same pattern as AAQ review) */
+                    ebq.parts.map((part) => {
+                      const key = `ebq-${part.letter}`;
+                      const rubricItem = ebq.rubric.find(r => r.row === part.letter);
+                      const maxPts = rubricItem?.points || 1;
+                      const response = ebqPartAnswers[part.letter] || "";
+                      const score = getScore(key);
+                      return (
+                        <div key={part.letter} style={{ borderBottom: `1px solid ${C.border}33`, paddingBottom: 12, marginBottom: 12 }}>
+                          <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 }}>
+                            <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+                              <div style={{ width: 26, height: 26, borderRadius: "50%", background: C.g, display: "flex", alignItems: "center", justifyContent: "center", fontWeight: 700, fontSize: 13, color: C.dark }}>{part.letter}</div>
+                              <span style={{ color: C.white, fontWeight: 600, fontSize: 14 }}>Part {part.letter}</span>
+                            </div>
+                            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+                              <span style={{ color: score > 0 ? C.g : C.r, fontWeight: 700, fontSize: 14 }}>{score}/{maxPts}</span>
+                              {loadingKeys[key] && <div style={{ width: 14, height: 14, border: `2px solid ${C.b}`, borderTopColor: "transparent", borderRadius: "50%", animation: "spin .8s linear infinite" }} />}
+                            </div>
+                          </div>
+                          <div style={{ color: C.muted, fontSize: 13, marginBottom: 8 }}><strong>Prompt:</strong> {part.prompt}</div>
+                          <div style={{ background: `${C.dark}66`, borderRadius: 8, padding: 12, marginBottom: 8 }}>
+                            <div style={{ color: C.white, fontSize: 13, lineHeight: 1.6, whiteSpace: "pre-wrap" }}>{response || "(No response)"}</div>
+                          </div>
+                          <FeedbackBox feedback={aiFeedback[key]} loading={loadingKeys[key]} />
+                          <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                            <span style={{ color: C.muted, fontSize: 12, marginRight: 4 }}>Override:</span>
+                            {Array.from({ length: maxPts + 1 }, (_, n) => (
+                              <button key={n} onClick={() => setManualScores(p => ({ ...p, [key]: n }))}
+                                style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${manualScores[key] === n ? C.g : C.border}`, background: manualScores[key] === n ? `${C.g}33` : C.mid, color: manualScores[key] === n ? C.g : C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: font }}>
+                                {n}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })
+                  ) : (
+                    /* Standard EBQ review */
+                    <>
+                      <div style={{ marginBottom: 12 }}>
+                        {ebq.sources.map(src => (
+                          <div key={src.num} style={{ marginBottom: 8, padding: "8px 12px", background: `${C.dark}44`, borderRadius: 8 }}>
+                            <div style={{ color: C.b, fontSize: 12, fontWeight: 700 }}>Source {src.num}: {src.title}</div>
+                            <div style={{ color: C.muted, fontSize: 11, fontStyle: "italic" }}>{src.citation}</div>
+                          </div>
                         ))}
-                      </tbody>
-                    </table>
-                  </div>
+                      </div>
+                      <div style={{ color: C.muted, fontSize: 12, marginBottom: 4, fontWeight: 600 }}>Your Essay:</div>
+                      <div style={{ background: `${C.dark}66`, borderRadius: 8, padding: 12, marginBottom: 12 }}>
+                        <div style={{ color: C.white, fontSize: 13, lineHeight: 1.7, whiteSpace: "pre-wrap" }}>{ebqAnswer || "(No response)"}</div>
+                        <div style={{ color: C.muted, fontSize: 11, marginTop: 4 }}>{(ebqAnswer || "").trim().split(/\s+/).filter(Boolean).length} words</div>
+                      </div>
+                      <FeedbackBox feedback={aiFeedback["ebq-total"]} loading={loadingKeys["ebq-total"]} />
+                      <div style={{ display: "flex", gap: 6, marginTop: 8 }}>
+                        <span style={{ color: C.muted, fontSize: 12, marginRight: 4 }}>Override:</span>
+                        {Array.from({ length: 8 }, (_, n) => (
+                          <button key={n} onClick={() => setManualScores(p => ({ ...p, "ebq-total": n }))}
+                            style={{ width: 28, height: 28, borderRadius: 6, border: `1px solid ${manualScores["ebq-total"] === n ? C.g : C.border}`, background: manualScores["ebq-total"] === n ? `${C.g}33` : C.mid, color: manualScores["ebq-total"] === n ? C.g : C.muted, fontSize: 12, fontWeight: 700, cursor: "pointer", fontFamily: font }}>
+                            {n}
+                          </button>
+                        ))}
+                      </div>
+                      <div style={{ marginTop: 12 }}>
+                        <div style={{ color: C.gold, fontSize: 11, fontWeight: 700, marginBottom: 6 }}>Rubric Breakdown</div>
+                        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+                          <thead><tr>{["Category", "Points", "Description"].map(h => (
+                            <th key={h} style={{ color: C.gold, fontWeight: 700, padding: "6px 10px", borderBottom: `1px solid ${C.border}`, textAlign: "left" }}>{h}</th>
+                          ))}</tr></thead>
+                          <tbody>{ebq.rubric.map((r, i) => (
+                            <tr key={i} style={{ borderBottom: `1px solid ${C.border}33` }}>
+                              <td style={{ padding: "6px 10px", color: C.white, fontWeight: 600 }}>{r.category}</td>
+                              <td style={{ padding: "6px 10px", color: C.muted, textAlign: "center" }}>{r.points}</td>
+                              <td style={{ padding: "6px 10px", color: C.muted, lineHeight: 1.4 }}>{r.description}</td>
+                            </tr>
+                          ))}</tbody>
+                        </table>
+                      </div>
+                    </>
+                  )}
                 </div>
               )}
             </div>
